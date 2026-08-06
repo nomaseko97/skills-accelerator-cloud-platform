@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills Accelerator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+<div>
+<h1>Skills Accelerator</h1>
+<p>Learn. Share. Accelerate.</p>
+</div>
+
+<button id="openModalBtn">Offer a Skill</button>
+</header>
+
+<main>
+
+<section class="hero">
+<div>
+<span class="tag">COMMUNITY LEARNING PLATFORM</span>
+
+<h2>Share what you know. Learn what you need.</h2>
+
+<p>
+Skills Accelerator connects people who want to share
+their knowledge with people who want to grow their skills.
+</p>
+
+<button id="heroOfferBtn">Offer a Skill</button>
+</div>
+</section>
+
+<section class="stats">
+<div>
+<strong id="skillCount">0</strong>
+<span>Skills Available</span>
+</div>
+
+<div>
+<strong id="sharerCount">0</strong>
+<span>Knowledge Sharers</span>
+</div>
+
+<div>
+<strong id="categoryCount">0</strong>
+<span>Active Categories</span>
+</div>
+</section>
+
+<section class="skills-section">
+
+<div class="section-heading">
+<div>
+<p class="tag">DISCOVER</p>
+<h2>Available Skills</h2>
+</div>
+
+<button id="sectionOfferBtn">+ Offer a Skill</button>
+</div>
+
+<div class="filters">
+<input
+id="searchInput"
+type="text"
+placeholder="Search skills..."
+>
+
+<select id="categoryFilter">
+<option value="">All Categories</option>
+<option>Cloud Computing</option>
+<option>Software Development</option>
+<option>Cybersecurity</option>
+<option>Data & Analytics</option>
+<option>DevOps</option>
+</select>
+
+<select id="levelFilter">
+<option value="">All Levels</option>
+<option>Beginner</option>
+<option>Intermediate</option>
+<option>Advanced</option>
+</select>
+</div>
+
+<div id="skillsContainer" class="skills-grid">
+
+<div class="empty-state">
+<h3>No skills available yet</h3>
+
+<p>
+Be the first person to share a skill.
+</p>
+
+<button id="emptyOfferBtn">
+Offer the First Skill
+</button>
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<div id="skillModal" class="modal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+<h2>Offer a Skill</h2>
+<button id="closeModalBtn">×</button>
+</div>
+
+<form id="skillForm">
+
+<label>
+Skill Name
+<input
+id="skillName"
+type="text"
+required
+>
+</label>
+
+<label>
+Category
+<select id="skillCategory" required>
+<option value="">Select category</option>
+<option>Cloud Computing</option>
+<option>Software Development</option>
+<option>Cybersecurity</option>
+<option>Data & Analytics</option>
+<option>DevOps</option>
+</select>
+</label>
+
+<label>
+Level
+<select id="skillLevel" required>
+<option value="">Select level</option>
+<option>Beginner</option>
+<option>Intermediate</option>
+<option>Advanced</option>
+</select>
+</label>
+
+<label>
+Offered By
+<input
+id="offeredBy"
+type="text"
+required
+>
+</label>
+
+<label>
+Availability
+<input
+id="availability"
+type="text"
+required
+>
+</label>
+
+<label>
+Description
+<textarea
+id="description"
+rows="4"
+required
+></textarea>
+</label>
+
+<div class="form-actions">
+<button
+type="button"
+id="cancelBtn"
+class="secondary"
+>
+Cancel
+</button>
+
+<button type="submit">
+Publish Skill
+</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+
+<footer>
+Skills Accelerator · Cloud Engineering Project
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>
