@@ -9,31 +9,66 @@
 
 <body>
 
-<header class="header">
+<header class="topbar">
+<div class="brand">
+<div class="brand-mark">SA</div>
+
 <div>
 <h1>Skills Accelerator</h1>
 <p>Learn. Share. Accelerate.</p>
 </div>
+</div>
 
-<button id="openModalBtn">Offer a Skill</button>
+<button id="openModalBtn">
++ Offer a Skill
+</button>
 </header>
 
 <main>
 
 <section class="hero">
-<div>
-<span class="tag">COMMUNITY LEARNING PLATFORM</span>
+<div class="hero-content">
+<span class="eyebrow">COMMUNITY LEARNING PLATFORM</span>
 
-<h2>Share what you know. Learn what you need.</h2>
+<h2>
+Share what you know.
+<span>Learn what you need.</span>
+</h2>
 
 <p>
-Skills Accelerator connects people who want to share
-their knowledge with people who want to grow their skills.
+Skills Accelerator helps people share practical knowledge,
+discover useful skills and grow through peer learning.
 </p>
 
-<button id="heroOfferBtn">Offer a Skill</button>
+<div class="hero-actions">
+<button id="heroOfferBtn">
+Offer a Skill
+</button>
+
+<a href="#skillsSection">
+Browse Skills
+</a>
+</div>
+</div>
+
+<div class="hero-panel">
+<div>
+<span>Built for</span>
+<strong>Learning Communities</strong>
+</div>
+
+<div>
+<span>Powered by</span>
+<strong>Shared Knowledge</strong>
+</div>
+
+<div>
+<span>Focused on</span>
+<strong>Practical Growth</strong>
+</div>
 </div>
 </section>
+
 
 <section class="stats">
 <div>
@@ -52,16 +87,29 @@ their knowledge with people who want to grow their skills.
 </div>
 </section>
 
-<section class="skills-section">
+
+<section
+id="skillsSection"
+class="skills-section"
+>
 
 <div class="section-heading">
 <div>
-<p class="tag">DISCOVER</p>
+<span class="eyebrow dark">DISCOVER</span>
+
 <h2>Available Skills</h2>
+
+<p>
+Explore skills shared by people across different
+technology disciplines.
+</p>
 </div>
 
-<button id="sectionOfferBtn">+ Offer a Skill</button>
+<button id="sectionOfferBtn">
++ Offer a Skill
+</button>
 </div>
+
 
 <div class="filters">
 <input
@@ -87,13 +135,19 @@ placeholder="Search skills..."
 </select>
 </div>
 
-<div id="skillsContainer" class="skills-grid">
+
+<div
+id="skillsContainer"
+class="skills-grid"
+>
 
 <div class="empty-state">
+<div class="empty-icon">↗</div>
+
 <h3>No skills available yet</h3>
 
 <p>
-Be the first person to share a skill.
+Be the first person to share practical knowledge.
 </p>
 
 <button id="emptyOfferBtn">
@@ -108,29 +162,51 @@ Offer the First Skill
 </main>
 
 
-<div id="skillModal" class="modal">
+<div
+id="skillModal"
+class="modal"
+>
 
 <div class="modal-content">
 
 <div class="modal-header">
+<div>
+<span class="eyebrow dark">
+SHARE KNOWLEDGE
+</span>
+
 <h2>Offer a Skill</h2>
-<button id="closeModalBtn">×</button>
 </div>
+
+<button id="closeModalBtn">
+×
+</button>
+</div>
+
 
 <form id="skillForm">
 
 <label>
 Skill Name
+
 <input
 id="skillName"
 type="text"
+placeholder="e.g. AWS Fundamentals"
 required
 >
 </label>
 
+
+<div class="form-row">
+
 <label>
 Category
-<select id="skillCategory" required>
+
+<select
+id="skillCategory"
+required
+>
 <option value="">Select category</option>
 <option>Cloud Computing</option>
 <option>Software Development</option>
@@ -140,9 +216,14 @@ Category
 </select>
 </label>
 
+
 <label>
 Level
-<select id="skillLevel" required>
+
+<select
+id="skillLevel"
+required
+>
 <option value="">Select level</option>
 <option>Beginner</option>
 <option>Intermediate</option>
@@ -150,34 +231,47 @@ Level
 </select>
 </label>
 
+</div>
+
+
 <label>
 Offered By
+
 <input
 id="offeredBy"
 type="text"
+placeholder="Your name"
 required
 >
 </label>
+
 
 <label>
 Availability
+
 <input
 id="availability"
 type="text"
+placeholder="e.g. Weekends"
 required
 >
 </label>
 
+
 <label>
 Description
+
 <textarea
 id="description"
 rows="4"
+placeholder="Describe what someone can learn..."
 required
 ></textarea>
 </label>
 
+
 <div class="form-actions">
+
 <button
 type="button"
 id="cancelBtn"
@@ -187,8 +281,9 @@ Cancel
 </button>
 
 <button type="submit">
-Publish Skill
+Save Skill
 </button>
+
 </div>
 
 </form>
@@ -199,8 +294,12 @@ Publish Skill
 
 
 <footer>
-Skills Accelerator · Cloud Engineering Project
+<div>
+<strong>Skills Accelerator</strong>
+<span>Cloud Engineering Project</span>
+</div>
 </footer>
+
 
 <script src="app.js"></script>
 
