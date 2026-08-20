@@ -372,6 +372,10 @@ resource "aws_launch_template" "app" {
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_ssm.name
+  }
+
   vpc_security_group_ids = [
     aws_security_group.app.id
   ]
@@ -438,4 +442,57 @@ resource "aws_autoscaling_group" "app" {
     value               = "skills-accelerator-app-instance"
     propagate_at_launch = true
   }
+}
+
+resource "aws_autoscaling_policy" "scale_up" {
+  name                   = "skills-accelerator-scale-up"
+  autoscaling_group_name = aws_autoscaling_group.app.name
+  adjustment_type        = "ChangeInCapacity"
+  scaling_adjustment     = 1
+  cooldown               = 300
+}
+
+# Scale Down Policy
+resource "aws_autoscaling_policy" "scale_down" {
+  name                   = "skills-accelerator-scale-down"
+  autoscaling_group_name = aws_autoscaling_group.app.name
+  adjustment_type        = "ChangeInCapacity"
+  scaling_adjustment     = -1
+  cooldown               = 300
+}
+
+# CloudWatch Alarm - High CPU
+resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+  alarm_name          = "skills-accelerator-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 70
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.app.name
+  }
+  alarm_actions = [
+    aws_autoscaling_policy.scale_up.arn
+  ]
+}
+
+# CloudWatch Alarm - Low CPU
+resource "aws_cloudwatch_metric_alarm" "low_cpu" {
+  alarm_name          = "skills-accelerator-low-cpu"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 30
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.app.name
+  }
+  alarm_actions = [
+    aws_autoscaling_policy.scale_down.arn
+  ]
 }
