@@ -288,6 +288,19 @@ resource "aws_db_instance" "main" {
   }
 }
 
+# Store the database password as an encrypted SSM Parameter Store value.
+# EC2 retrieves this value at boot instead of receiving it in user data.
+resource "aws_ssm_parameter" "db_password" {
+  name        = "/skills-accelerator/database/password"
+  description = "Database password for the Skills Accelerator application"
+  type        = "SecureString"
+  value       = var.db_password
+
+  tags = {
+    Name = "skills-accelerator-database-password"
+  }
+}
+
 # Application Load Balancer
 resource "aws_lb" "main" {
   name               = "skills-accelerator-alb"
@@ -342,6 +355,16 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# CloudWatch log group for EC2 audit, bootstrap, and application logs.
+resource "aws_cloudwatch_log_group" "ec2_audit" {
+  name              = "/skills-accelerator/ec2/audit"
+  retention_in_days = 30
+
+  tags = {
+    Name = "skills-accelerator-ec2-audit"
+  }
+}
+
 resource "aws_iam_role" "ec2_ssm" {
   name = "skills-accelerator-ec2-ssm-role"
   assume_role_policy = jsonencode({
@@ -361,6 +384,35 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   role       = aws_iam_role.ec2_ssm.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
+
+# Allow the CloudWatch Agent and Docker logging driver to publish logs.
+resource "aws_iam_role_policy_attachment" "ec2_cloudwatch_agent" {
+  role       = aws_iam_role.ec2_ssm.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# Grant EC2 only the Parameter Store action and parameter it needs.
+data "aws_iam_policy_document" "ec2_db_password" {
+  statement {
+    sid    = "ReadOnlyDatabasePassword"
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter"
+    ]
+
+    resources = [
+      aws_ssm_parameter.db_password.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "ec2_db_password" {
+  name   = "SkillsAccelerator-SSM-Parameter-Read"
+  role   = aws_iam_role.ec2_ssm.name
+  policy = data.aws_iam_policy_document.ec2_db_password.json
+}
+
 resource "aws_iam_instance_profile" "ec2_ssm" {
   name = "skills-accelerator-ec2-ssm-profile"
   role = aws_iam_role.ec2_ssm.name
@@ -382,12 +434,76 @@ resource "aws_launch_template" "app" {
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    set -euo pipefail
 
     dnf update -y
-    dnf install -y docker
+    dnf install -y docker amazon-cloudwatch-agent audit
 
     systemctl enable docker
     systemctl start docker
+    systemctl enable auditd || true
+    systemctl start auditd || true
+
+    cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CWAGENT'
+    {
+      "agent": {
+        "run_as_user": "root"
+      },
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {
+                "file_path": "/var/log/audit/audit.log",
+                "log_group_name": "${aws_cloudwatch_log_group.ec2_audit.name}",
+                "log_stream_name": "{instance_id}/audit",
+                "timezone": "UTC"
+              },
+              {
+                "file_path": "/var/log/cloud-init-output.log",
+                "log_group_name": "${aws_cloudwatch_log_group.ec2_audit.name}",
+                "log_stream_name": "{instance_id}/cloud-init",
+                "timezone": "UTC"
+              }
+            ]
+          }
+        }
+      }
+    }
+    CWAGENT
+
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config \
+      -m ec2 \
+      -s \
+      -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+    DB_PASSWORD=""
+    for attempt in $(seq 1 12); do
+      if DB_PASSWORD=$(aws ssm get-parameter \
+        --name "${aws_ssm_parameter.db_password.name}" \
+        --with-decryption \
+        --query "Parameter.Value" \
+        --output text \
+        --region "${var.aws_region}"); then
+        break
+      fi
+
+      echo "Waiting for permission to retrieve the database password (attempt $attempt of 12)..."
+      sleep 10
+    done
+
+    if [ -z "$DB_PASSWORD" ]; then
+      echo "Unable to retrieve the database password from Parameter Store."
+      exit 1
+    fi
+
+    TOKEN=$(curl -fsS -X PUT \
+      -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" \
+      http://169.254.169.254/latest/api/token)
+    INSTANCE_ID=$(curl -fsS \
+      -H "X-aws-ec2-metadata-token: $TOKEN" \
+      http://169.254.169.254/latest/meta-data/instance-id)
 
     docker pull nomaseko97/skills-accelerator:latest
 
@@ -399,10 +515,20 @@ resource "aws_launch_template" "app" {
       -e DB_PORT=5432 \
       -e DB_NAME=skills_accelerator \
       -e DB_USER=${var.db_username} \
-      -e DB_PASSWORD='${var.db_password}' \
+      -e DB_PASSWORD="$DB_PASSWORD" \
+      --log-driver=awslogs \
+      --log-opt awslogs-region=${var.aws_region} \
+      --log-opt awslogs-group=${aws_cloudwatch_log_group.ec2_audit.name} \
+      --log-opt awslogs-stream="$INSTANCE_ID/application" \
       nomaseko97/skills-accelerator:latest
   EOF
   )
+
+  depends_on = [
+    aws_iam_role_policy_attachment.ec2_ssm,
+    aws_iam_role_policy_attachment.ec2_cloudwatch_agent,
+    aws_iam_role_policy.ec2_db_password
+  ]
 
   tag_specifications {
     resource_type = "instance"
@@ -412,6 +538,7 @@ resource "aws_launch_template" "app" {
     }
   }
 }
+
 # Auto Scaling Group for EC2 application instances
 resource "aws_autoscaling_group" "app" {
   name = "skills-accelerator-asg"

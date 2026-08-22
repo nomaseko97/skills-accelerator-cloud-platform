@@ -5,3 +5,23 @@ terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/crash.log
+
+# Terraform variable files that may contain secrets
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+
+# Terraform plan files
+terraform/*.tfplan
+terraform/tfplan
+
+# Local override files
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+
+# SSH keys
+*.pem
+*.key
+skills-deploy
+skills-deploy.pub
